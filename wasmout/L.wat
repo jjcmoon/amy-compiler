@@ -5,6 +5,32 @@
   (import "system" "readInt" (func $Std_readInt (result i32)))
   (import "system" "mem" (memory 100))
   (global (mut i32) i32.const 0) 
+  (table (export "lookup") 22 anyfunc)
+  (elem (i32.const 0) 
+    $O_isDefined 
+    $O_get 
+    $O_getOrElse 
+    $O_orElse 
+    $O_toList 
+    $L_isEmpty 
+    $L_length 
+    $L_head 
+    $L_headOption 
+    $L_reverse 
+    $L_reverseAcc 
+    $L_indexOf 
+    $L_range 
+    $L_sum 
+    $L_concat 
+    $L_contains 
+    $L_merge 
+    $L_split 
+    $L_mergeSort 
+    $L_toString 
+    $L_toString1 
+    $L_take 
+  )
+  (type $return_iti (func (param i32) (result i32)))
 
   (func $String_concat (param i32 i32) (result i32) (local i32 i32)
     get_global 0
@@ -763,6 +789,7 @@
     i32.and
     if (result i32)
       get_global 0
+      get_global 0
       set_local 5
       get_global 0
       i32.const 12
@@ -791,12 +818,19 @@
       get_local 6
       i32.store
       get_local 5
+      i32.store
+      get_global 0
+      i32.const 4
+      i32.add
+      set_global 0
+      i32.const -1
     else
       get_local 1
       i32.load
       i32.const 0
       i32.eq
       if (result i32)
+        get_global 0
         get_global 0
         set_local 7
         get_global 0
@@ -807,6 +841,12 @@
         i32.const 0
         i32.store
         get_local 7
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_global 0
         i32.const 0
@@ -1312,6 +1352,7 @@
     i32.and
     if (result i32)
       get_global 0
+      get_global 0
       set_local 5
       get_global 0
       i32.const 8
@@ -1326,12 +1367,19 @@
       get_local 3
       i32.store
       get_local 5
+      i32.store
+      get_global 0
+      i32.const 4
+      i32.add
+      set_global 0
+      i32.const -1
     else
       get_local 1
       i32.load
       i32.const 0
       i32.eq
       if (result i32)
+        get_global 0
         get_global 0
         set_local 6
         get_global 0
@@ -1342,6 +1390,12 @@
         i32.const 0
         i32.store
         get_local 6
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_global 0
         i32.const 0
@@ -1414,144 +1468,165 @@
     end
   )
 
-  (func $L_reverse (param i32) (result i32) (local i32)
-    get_local 0
+  (func $L_reverse (param i32) (result i32) (local i32 i32)
     get_global 0
     set_local 1
+    get_global 0
+    i32.const 12
+    i32.add
+    set_global 0
+    get_local 1
+    i32.const 10
+    i32.store
+    get_local 1
+    i32.const 4
+    i32.add
+    get_local 0
+    i32.store
+    get_local 1
+    i32.const 8
+    i32.add
+    get_global 0
+    set_local 2
     get_global 0
     i32.const 4
     i32.add
     set_global 0
-    get_local 1
+    get_local 2
     i32.const 0
     i32.store
+    get_local 2
+    i32.store
     get_local 1
-    call $L_reverseAcc
   )
 
   (func $L_reverseAcc (param i32 i32) (result i32) (local i32 i32 i32 i32 i32 i32)
-    get_local 0
-    set_local 2
-    get_local 2
-    i32.load
-    i32.const 0
-    i32.eq
-    if (result i32)
-      get_local 1
-    else
+    loop $tailjump (result i32)
+      get_local 0
+      set_local 2
       get_local 2
       i32.load
-      i32.const 1
+      i32.const 0
       i32.eq
-      get_local 2
-      i32.const 4
-      i32.add
-      i32.load
-      set_local 3
-      get_local 3
-      set_local 4
-      i32.const 1
-      i32.and
-      get_local 2
-      i32.const 8
-      i32.add
-      i32.load
-      set_local 5
-      get_local 5
-      set_local 6
-      i32.const 1
-      i32.and
       if (result i32)
-        get_local 6
-        get_global 0
-        set_local 7
-        get_global 0
-        i32.const 12
-        i32.add
-        set_global 0
-        get_local 7
-        i32.const 1
-        i32.store
-        get_local 7
-        i32.const 4
-        i32.add
-        get_local 4
-        i32.store
-        get_local 7
-        i32.const 8
-        i32.add
         get_local 1
-        i32.store
-        get_local 7
-        call $L_reverseAcc
       else
-        get_global 0
-        i32.const 0
-        i32.add
-        i32.const 77
-        i32.store8
-        get_global 0
+        get_local 2
+        i32.load
         i32.const 1
-        i32.add
-        i32.const 97
-        i32.store8
-        get_global 0
-        i32.const 2
-        i32.add
-        i32.const 116
-        i32.store8
-        get_global 0
-        i32.const 3
-        i32.add
-        i32.const 99
-        i32.store8
-        get_global 0
+        i32.eq
+        get_local 2
         i32.const 4
         i32.add
-        i32.const 104
-        i32.store8
-        get_global 0
-        i32.const 5
-        i32.add
-        i32.const 32
-        i32.store8
-        get_global 0
-        i32.const 6
-        i32.add
-        i32.const 101
-        i32.store8
-        get_global 0
-        i32.const 7
-        i32.add
-        i32.const 114
-        i32.store8
-        get_global 0
+        i32.load
+        set_local 3
+        get_local 3
+        set_local 4
+        i32.const 1
+        i32.and
+        get_local 2
         i32.const 8
         i32.add
-        i32.const 114
-        i32.store8
-        get_global 0
-        i32.const 9
-        i32.add
-        i32.const 111
-        i32.store8
-        get_global 0
-        i32.const 10
-        i32.add
-        i32.const 114
-        i32.store8
-        get_global 0
-        i32.const 11
-        i32.add
-        i32.const 0
-        i32.store8
-        get_global 0
-        get_global 0
-        i32.const 12
-        i32.add
-        set_global 0
-        call $Std_printString
-        unreachable
+        i32.load
+        set_local 5
+        get_local 5
+        set_local 6
+        i32.const 1
+        i32.and
+        if (result i32)
+          get_local 6
+          get_global 0
+          set_local 7
+          get_global 0
+          i32.const 12
+          i32.add
+          set_global 0
+          get_local 7
+          i32.const 1
+          i32.store
+          get_local 7
+          i32.const 4
+          i32.add
+          get_local 4
+          i32.store
+          get_local 7
+          i32.const 8
+          i32.add
+          get_local 1
+          i32.store
+          get_local 7
+          set_local 1
+          set_local 0
+          br $tailjump
+        else
+          get_global 0
+          i32.const 0
+          i32.add
+          i32.const 77
+          i32.store8
+          get_global 0
+          i32.const 1
+          i32.add
+          i32.const 97
+          i32.store8
+          get_global 0
+          i32.const 2
+          i32.add
+          i32.const 116
+          i32.store8
+          get_global 0
+          i32.const 3
+          i32.add
+          i32.const 99
+          i32.store8
+          get_global 0
+          i32.const 4
+          i32.add
+          i32.const 104
+          i32.store8
+          get_global 0
+          i32.const 5
+          i32.add
+          i32.const 32
+          i32.store8
+          get_global 0
+          i32.const 6
+          i32.add
+          i32.const 101
+          i32.store8
+          get_global 0
+          i32.const 7
+          i32.add
+          i32.const 114
+          i32.store8
+          get_global 0
+          i32.const 8
+          i32.add
+          i32.const 114
+          i32.store8
+          get_global 0
+          i32.const 9
+          i32.add
+          i32.const 111
+          i32.store8
+          get_global 0
+          i32.const 10
+          i32.add
+          i32.const 114
+          i32.store8
+          get_global 0
+          i32.const 11
+          i32.add
+          i32.const 0
+          i32.store8
+          get_global 0
+          get_global 0
+          i32.const 12
+          i32.add
+          set_global 0
+          call $Std_printString
+          unreachable
+        end
       end
     end
   )
@@ -2001,10 +2076,13 @@
         get_local 4
         get_local 1
         i32.eq
-        get_local 6
-        get_local 1
-        call $L_contains
-        i32.or
+        if (result i32)
+          i32.const 1
+        else
+          get_local 6
+          get_local 1
+          call $L_contains
+        end
       else
         get_global 0
         i32.const 0
@@ -2408,6 +2486,7 @@
       i32.and
       if (result i32)
         get_global 0
+        get_global 0
         set_local 17
         get_global 0
         i32.const 12
@@ -2465,6 +2544,12 @@
         get_local 19
         i32.store
         get_local 17
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_global 0
         i32.const 0
@@ -2538,6 +2623,7 @@
       i32.const 1
       if (result i32)
         get_global 0
+        get_global 0
         set_local 21
         get_global 0
         i32.const 12
@@ -2566,6 +2652,12 @@
         get_local 22
         i32.store
         get_local 21
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_global 0
         i32.const 0
@@ -2638,7 +2730,7 @@
     end
   )
 
-  (func $L_mergeSort (param i32) (result i32) (local i32 i32 i32 i32 i32 i32 i32 i32 i32 i32)
+  (func $L_mergeSort (param i32) (result i32) (local i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32)
     get_local 0
     set_local 1
     get_local 1
@@ -2646,7 +2738,14 @@
     i32.const 0
     i32.eq
     if (result i32)
+      get_global 0
       get_local 0
+      i32.store
+      get_global 0
+      i32.const 4
+      i32.add
+      set_global 0
+      i32.const -1
     else
       get_local 1
       i32.load
@@ -2672,7 +2771,14 @@
       i32.eq
       i32.and
       if (result i32)
+        get_global 0
         get_local 0
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_local 1
         set_local 5
@@ -2704,11 +2810,28 @@
           i32.const 1
           i32.and
           if (result i32)
+            get_global 0
+            set_local 11
+            get_global 0
+            i32.const 12
+            i32.add
+            set_global 0
+            get_local 11
+            i32.const 16
+            i32.store
+            get_local 11
+            i32.const 4
+            i32.add
             get_local 8
             call $L_mergeSort
+            i32.store
+            get_local 11
+            i32.const 8
+            i32.add
             get_local 10
             call $L_mergeSort
-            call $L_merge
+            i32.store
+            get_local 11
           else
             get_global 0
             i32.const 0
@@ -3055,7 +3178,7 @@
     end
   )
 
-  (func $L_toString1 (param i32) (result i32) (local i32 i32 i32 i32 i32 i32 i32 i32)
+  (func $L_toString1 (param i32) (result i32) (local i32 i32 i32 i32 i32 i32 i32 i32 i32)
     get_local 0
     set_local 1
     get_local 1
@@ -3082,8 +3205,21 @@
     i32.eq
     i32.and
     if (result i32)
+      get_global 0
+      set_local 5
+      get_global 0
+      i32.const 8
+      i32.add
+      set_global 0
+      get_local 5
+      i32.const -1
+      i32.store
+      get_local 5
+      i32.const 4
+      i32.add
       get_local 3
-      call $Std_intToString
+      i32.store
+      get_local 5
     else
       get_local 1
       i32.load
@@ -3093,22 +3229,23 @@
       i32.const 4
       i32.add
       i32.load
-      set_local 5
-      get_local 5
       set_local 6
+      get_local 6
+      set_local 7
       i32.const 1
       i32.and
       get_local 1
       i32.const 8
       i32.add
       i32.load
-      set_local 7
-      get_local 7
       set_local 8
+      get_local 8
+      set_local 9
       i32.const 1
       i32.and
       if (result i32)
-        get_local 6
+        get_global 0
+        get_local 7
         call $Std_intToString
         get_global 0
         i32.const 0
@@ -3136,9 +3273,15 @@
         i32.add
         set_global 0
         call $String_concat
-        get_local 8
+        get_local 9
         call $L_toString1
         call $String_concat
+        i32.store
+        get_global 0
+        i32.const 4
+        i32.add
+        set_global 0
+        i32.const -1
       else
         get_global 0
         i32.const 0

@@ -1,0 +1,7 @@
+First of all the trampolining support should be finished, by allowing multiple argument trampolines. This was described in the previous section, so I will not come back to how to do this.
+
+An alternative extension, whould be by not trampolining in the compiler itself as was done here, but as a library like in Scala. This whould push more responsabilty to the Amy programmer, but does allow to choose whether or not to use trampolining. Furthermore, it whould avoid the whole mess of having to implement a custom call stack. 
+
+The implementation could be handled like for the Std library, with some stuff handled in amy code, and some things modified behind the scene by the compiler. There could be Trampoline ADT, that has a string parameter (containing the function name) and a arguments list. Trampoline calls could be made using a custom hardcoded function.
+
+

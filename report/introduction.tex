@@ -1,0 +1,14 @@
+In this project, I implemented a simple compiler for the Amy language. Amy is a simple toy language based on Scala, it is statically typed and purely functional (besides the Std library and error). The compiler was implemented step-by-step in a pipelined fashion:
+\begin{enumerate}
+	\item \textbf{Lexer}. The lexer converts the input text files into a stream of tokens. Comments and whitespace are disregarded.
+	\item \textbf{Parser}. Using an LL1 grammar, the tokenstream gets parsed into an AST. The main complexity in this phase are the operator precendence rules and choosing the appropriate associativity.
+	\item \textbf{Name-analyzer}. The analyzer has three main purposes. Firstly it makes sure that the naming rules are being adhered to correctly, asserting that e.g. there are no undefined variables are used. Secondly it assigns unique names to all variables and functions, so that there can be no confusion when resolving a variable in later phases. Lastly it populates the symbol table.
+	\item \textbf{Type-checker}. A simplified Hindley-Milner type-inference algorithm checks is used to check that all typing rules are observed.
+	\item \textbf{Code-generation}. The backend of the compiler converts the AST into wasm bytecode, which can be executed with nodejs.
+\end{enumerate}
+
+To keep this project manageble Amy has some obvious lacking features that usually are included in functional languages. Some that come to mind are the lack of any memory management, or a kind of higher-order functions. My specific project focusses on a third one: tail call elimination (TCE).
+
+Like any functional language, Amy only provides support for iterations through recursion. However this warrants some kind of TCE, indeed the lack of this whould prevent including infinite loops in your Amy programs.
+
+My extention to the amy compiler not only optimizes tail recursion, but also modifies the code-generation to include trampolines, allowing general TCE.

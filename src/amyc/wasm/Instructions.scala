@@ -23,6 +23,7 @@ object Instructions {
   case object Le_s extends Instruction // Signed less-equals
   case object Eq   extends Instruction
   case object Drop extends Instruction // Drops the top value of the stack
+  case object Nop  extends Instruction
 
   // Control instructions
   case object If_void extends Instruction // Marks the beginning of an if-block (with implicit 'then').
@@ -36,9 +37,14 @@ object Instructions {
   case object Return              extends Instruction
   case object Unreachable         extends Instruction // Always fails the program
 
+  case class Loop32(label:String)  extends Instruction
+  case class Block32(label:String) extends Instruction
+  case object Call_indirect        extends Instruction
+
   // Locals (parameters, local variables)
   case class GetLocal(index: Int) extends Instruction
   case class SetLocal(index: Int) extends Instruction
+  //case class TeeLocal(index: Int) extends Instruction
 
   // Global variables
   case class GetGlobal(index: Int) extends Instruction

@@ -73,7 +73,7 @@ object Utils {
 
   // Built-in implementation of concatenation
   val concatImpl: Function = {
-    Function("String_concat", 2, false) { lh =>
+    Function("String_concat", 2, false, -1) { lh =>
       val ptrS = lh.getFreshLocal()
       val ptrD = lh.getFreshLocal()
       val label = getFreshLabel()
@@ -133,7 +133,7 @@ object Utils {
   }
 
   val digitToStringImpl: Function = {
-    Function("Std_digitToString", 1, false) { lh =>
+    Function("Std_digitToString", 1, false, -1) { lh =>
       // We know we have to create a string of total size 4 (digit code + padding), so we do it all together
       // We do not need to shift the digit due to little endian structure!
       GetGlobal(memoryBoundary) <:> GetLocal(0) <:> Const('0'.toInt) <:> Add <:> Store <:>
@@ -144,7 +144,7 @@ object Utils {
   }
 
   val readStringImpl: Function = {
-    Function("Std_readString", 0, false) { lh =>
+    Function("Std_readString", 0, false, -1) { lh =>
       // We need to use the weird interface of javascript read string:
       // we pass the old memory boundary and get the new one.
       // In the end we have to return the old, where the fresh string lies.

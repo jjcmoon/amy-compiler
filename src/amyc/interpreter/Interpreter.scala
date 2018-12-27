@@ -30,6 +30,60 @@ object Interpreter extends Pipeline[(Program, SymbolTable), Unit] {
   case object UnitValue extends Value
   case class CaseClassValue(constructor: Identifier, args: List[Value]) extends Value
 
+  def static_interpret(expr:Expr): Value = expr match {
+    case IntLiteral(i) =>
+      IntValue(i)
+    case BooleanLiteral(b) =>
+      BooleanValue(b)
+    case StringLiteral(s) =>
+      StringValue(s)
+    case UnitLiteral() =>
+      UnitValue
+    case Plus(lhs, rhs) =>
+      IntValue(static_interpret(lhs).asInt + static_interpret(rhs).asInt)
+    case Minus(lhs, rhs) =>
+      IntValue(static_interpret(lhs).asInt - static_interpret(rhs).asInt)
+    case Times(lhs, rhs) =>
+      IntValue(static_interpret(lhs).asInt * static_interpret(rhs).asInt)
+    case Div(lhs, rhs) => 
+      IntValue(static_interpret(lhs).asInt / static_interpret(rhs).asInt)
+    case Mod(lhs, rhs) =>
+      IntValue(static_interpret(lhs).asInt % static_interpret(rhs).asInt)
+    case LessThan(lhs, rhs) =>
+      BooleanValue(static_interpret(lhs).asInt < static_interpret(rhs).asInt)
+    case LessEquals(lhs, rhs) =>
+      BooleanValue(static_interpret(lhs).asInt <= static_interpret(rhs).asInt)
+    case And(lhs, rhs) =>
+      BooleanValue(static_interpret(lhs).asBoolean && static_interpret(rhs).asBoolean)
+    case Or(lhs, rhs) =>
+      BooleanValue(static_interpret(lhs).asBoolean || static_interpret(rhs).asBoolean)
+    case Equals(lhs, rhs) => {
+      val ilhs = static_interpret(lhs);
+      val irhs = static_interpret(rhs);
+      ilhs match {
+        case UnitValue => BooleanValue(true)
+        case IntValue(_) => BooleanValue(ilhs.asInt == irhs.asInt)
+        case BooleanValue(_) => BooleanValue(ilhs.asBoolean == irhs.asBoolean)
+        case StringValue(_) => BooleanValue(ilhs eq irhs)
+        case CaseClassValue(_, _) => BooleanValue(ilhs eq irhs)
+      }
+    }
+    case Concat(lhs, rhs) =>
+      StringValue(static_interpret(lhs).asString concat static_interpret(rhs).asString )
+    case Not(e) =>
+      BooleanValue(!static_interpret(e).asBoolean)
+    case Neg(e) =>
+      IntValue(-static_interpret(e).asInt)
+  }
+
+  def value2TreeMod(v:Value):Expr = v match {
+    case IntValue(n) => IntLiteral(n)
+    case UnitValue => UnitLiteral()
+    case BooleanValue(b) => BooleanLiteral(b)
+    case StringValue(s) => StringLiteral(s)
+    case CaseClassValue(constr, args) => Call(constr, args map value2TreeMod)
+  }
+
   def run(ctx: Context)(v: (Program, SymbolTable)): Unit = {
     val (program, table) = v
 
@@ -57,7 +111,7 @@ object Interpreter extends Pipeline[(Program, SymbolTable), Unit] {
     def findFunctionOwner(functionName: Identifier) = table.getFunction(functionName).get.owner.name
     def findFunction(owner: String, name: String) = {
       program.modules.find(_.name.name == owner).get.defs.collectFirst {
-        case fd@FunDef(fn, _, _, _) if fn.name == name => fd
+        case fd@PureFunDef(fn, _, _, _) if fn.name == name => fd
       }.get
     }
 

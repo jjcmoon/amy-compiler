@@ -43,17 +43,21 @@ trait TreeModule {
   case class UnitLiteral() extends Literal[Unit] { val value: Unit = () }
 
   // Binary operators
-  case class Plus(lhs: Expr, rhs: Expr) extends Expr
-  case class Minus(lhs: Expr, rhs: Expr) extends Expr
-  case class Times(lhs: Expr, rhs: Expr) extends Expr
-  case class Div(lhs: Expr, rhs: Expr) extends Expr
-  case class Mod(lhs: Expr, rhs: Expr) extends Expr
-  case class LessThan(lhs: Expr, rhs: Expr) extends Expr
-  case class LessEquals(lhs: Expr, rhs: Expr) extends Expr
-  case class And(lhs: Expr, rhs: Expr) extends Expr
-  case class Or(lhs: Expr, rhs: Expr) extends Expr
-  case class Equals(lhs: Expr, rhs: Expr) extends Expr
-  case class Concat(lhs: Expr, rhs: Expr) extends Expr
+  trait BinOp extends Expr {
+    val lhs: Expr 
+    val rhs: Expr
+  }
+  case class Plus(lhs: Expr, rhs: Expr) extends BinOp
+  case class Minus(lhs: Expr, rhs: Expr) extends BinOp
+  case class Times(lhs: Expr, rhs: Expr) extends BinOp
+  case class Div(lhs: Expr, rhs: Expr) extends BinOp
+  case class Mod(lhs: Expr, rhs: Expr) extends BinOp
+  case class LessThan(lhs: Expr, rhs: Expr) extends BinOp
+  case class LessEquals(lhs: Expr, rhs: Expr) extends BinOp
+  case class And(lhs: Expr, rhs: Expr) extends BinOp
+  case class Or(lhs: Expr, rhs: Expr) extends BinOp
+  case class Equals(lhs: Expr, rhs: Expr) extends BinOp
+  case class Concat(lhs: Expr, rhs: Expr) extends BinOp
 
   // Unary operators
   case class Not(e: Expr) extends Expr
@@ -61,6 +65,9 @@ trait TreeModule {
 
   // Function/ type constructor call
   case class Call(qname: QualifiedName, args: List[Expr]) extends Expr
+  case class IndirectCall(qname: QualifiedName, args: List[Expr]) extends Expr
+  case class Trampoline(qname: QualifiedName, args: List[Expr]) extends Expr
+  case class TailCall(args: List[Expr]) extends Expr
   // The ; operator
   case class Sequence(e1: Expr, e2: Expr) extends Expr
   // Local variable definition
@@ -73,6 +80,8 @@ trait TreeModule {
   }
   // Represents a computational error; prints its message, then exits
   case class Error(msg: Expr) extends Expr
+
+  case class TrampReturn(fr:Expr) extends Expr
 
   // Cases and patterns for Match expressions
   case class MatchCase(pat: Pattern, expr: Expr) extends Tree
@@ -87,9 +96,18 @@ trait TreeModule {
   trait Definition extends Tree { val name: Name }
   case class ModuleDef(name: Name, defs: List[ClassOrFunDef], optExpr: Option[Expr]) extends Definition
   trait ClassOrFunDef extends Definition
-  case class FunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends ClassOrFunDef {
+
+  trait FunDef extends ClassOrFunDef {
+    val name: Name
+    val params: List[ParamDef]
+    val retType: TypeTree
+    val body: Expr
     def paramNames = params.map(_.name)
   }
+  case class PureFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
+  case class TailRecFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
+  case class TrampFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
+
   case class AbstractClassDef(name: Name) extends ClassOrFunDef
   case class CaseClassDef(name: Name, fields: List[TypeTree], parent: Name) extends ClassOrFunDef
   case class ParamDef(name: Name, tt: TypeTree) extends Definition

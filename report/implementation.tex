@@ -1,0 +1,45 @@
+
+\subsection{Theoretical Background}
+Tail call recursion addresses the issue of stack usage, mainly in functional languages. Indeed, when using recursion as your primary iteration mechanism, stack space can become excessive. Even simple algorithms like factorial will have a linear space complexity. 
+
+TCE abuses the fact that these recursive calls often occur at the end of the function (tail calls). This allows us to release the current stack frame before recursing. This is the essence of tail call elimination: keep reusing the current stack frame when performing tail calls, and as such regain constant memory usage when iterating.
+
+The application of TCE is complicated however, by the choice of our backend. Web Assembly is a kind of stack machine, only allowing for a somewhat higher level interface with the hardware. Because of this it is not possible to just overwrite the stack frame. So altough TCE is on it's way to being included in wasm, it is currently not possible to perform TCE in the naive way.
+
+There many possible solutions to this (cf. \cite{Slides}). Notably languages like Scala and Clojure have the same problem. They are both functional languages with the JVM as backend. The JVM, much like in wasm, is a type of stack machine that doesn't provide primitives for TCE.\footnote{Contrary to wasm however, JVM doesn't have tail call primitives because of technical reasons. For more information see \cite{clements2004tail}.}
+
+Maybe the simplest approach to TCE on stack based machines are trampolines. Using trampolines, a function does not perform a tailcall itself. Instead, it returns, and the caller performs the call (= the trampoline). This may sound familiar if you're accustomed to continuation-passing style.
+
+Of course this has the downside of increasing some overhead on every tail call. There are no techniques to decrease the amount of overhead spent on trampolines, but none can completely remove it. For this reason, Scala and Clojure still have no general support for TCE. Scala does however optimize recursive tail calls and has a tailcalls library providing some kind of trampolines. (See \cite{bjarnarson2012stackless}) Clojure chose to promote the use of imperative iteration to avoid the problem.
+
+Only optimizing recursive tail-calls, like Scala does, is far easier than the general case. The tail-call can be replaced by a jump to the start of the function, after making sure that the parameters are overwritten. (So effectivly a tail-recursive function is compiled as a non-recursive function with a while loop.)
+
+Unlike trampolines, this approach has no real disadvantages in Amy. So when possible it will be applied. In other cases, trampolines will be deployed.
+
+\subsection{Implementation Details}
+
+The implementation has two facets. First of the tail calls need be properly recognized as such, secondly the code-generation needs to support tailcalls.
+
+\subsubsection{Tail call detection}
+
+The first part is implemented in a separate compiler phase, Optimization, wedged in between the type-checking and code-generation. Extra case classes in the TreeModule where added to express the different forms of tailcalls: \texttt{IndirectCall}, \texttt{Trampoline} and \texttt{TailCall}. The \texttt{TailCall} is used to indicate that a call is a recursive tailcall. The \texttt{IndirectCall} is used when a function wants to call a function by returning to a trampoline. Finally the \texttt{Trampoline} indicates the placement of a trampoline.
+
+The detection and rewriting of the AST happens by recursivly traversing the AST, in the usual way. Maybe the only interesting case in this phase, is when a function is both tail recursive and has a non-recursive tail call. In this case I opted to use trampolines. If whould however be possible to merge the approaches, but I opted to avoid the complexity of this fairly rare edge case.
+
+\subsubsection{Tail call code generation}
+
+The next step was modifying the code generation. For tail-recursion this fairly limited. A loop block encloses all tail-recursive functions, and a \texttt{TailCall} puts arguments into the appropriate locals after which it jumps.
+
+The most difficult part of the project was the code generation for trampolines. A Trampoline does not know which function to call at compile time (as it is returned by the \texttt{IndirectCall}). So there was a need to implement a kind of dynamic dispatch. In wasm this can be handled by using the \texttt{call\_indirect} instruction. This pops a value of the stack and does a lookup in a table that maps ints to a function. Next, the found function is called in the usual way.
+
+To generate the function table, functions where assigned an index in the name-analyzer phase (much like for the constructor signatures). Using these, the ModulePrinter makes a table that maps the function, and the code-generator can find the appropriate values in the symboltable as needed.
+
+Before we continue at how the \texttt{Trampoline} is handled it might be worth looking at \texttt{IndirectCall}. This needs to store all the arguments and which function to call in memory. Notice that we can reuse the tools we developed to store adt's. They both store a variable amount of arguments with some index.
+
+The trampoline can now perform the inverse operation, fetching the arguments from memory and put them on the stack, so the \texttt{call\_indirect} has access to them. Notice however that this is somewhat more complicated as the called function might not want to call anything (handled by returning a -1 instead of the memory location), furthermore the amount of arguments for the trampoline need not be fixed, so some kind of while loop is needed, deriving the amount of argument to be loaded from the distance of the returned memory location and the global memory pointer.
+
+This leads us to the final issue: the static type checking of wasm. The problem is that \texttt{call\_indirect} can dynamically choose a function, but not its type. This needs to be known at compile time, as it is an explicit parameter. This is problematic as the trampoline might need to call functions with a variable amount of parameters. I ended up not solving this problem, and only allowing trampolining with functions of a single parameter.
+
+The only feasible possible solution I could envision to this whould have involved a lot of complexity. Indeed, one could make all trampolinable function void, and let them load their arguments from memory. As such we effectivly implement a custom call stack.
+
+Alternatively, this could be solved by adding higher-order functions and making sure all trampolined functions are curried. I did not find this to be feasible either.

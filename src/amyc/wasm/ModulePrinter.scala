@@ -12,12 +12,27 @@ object ModulePrinter {
     "(module ",
     Indented(Stacked(mod.imports map mkImport)),
     Indented("(global (mut i32) i32.const 0) " * mod.globals),
+    Indented(mkTable(mod.functions.filter(_.index>=0))),
+    Indented("(type $return_iti (func (param i32) (result i32)))"),
     Indented(Stacked(mod.functions map mkFun)),
     ")"
   )
 
   private def mkImport(s: String): Document =
     Lined(List("(import ", s, ")"))
+
+  private def mkTable(fhs: List[Function]): Document = {
+    val funcs = sortFuncs(fhs.filter(_.index>=0))
+    Stacked(
+      Lined(List("(table (export \"lookup\") ", fhs.length.toString, " anyfunc)")),
+      "(elem (i32.const 0) ", 
+      Indented(Stacked(funcs)), 
+      ")"
+    )
+  }
+
+  private def sortFuncs(fhs: List[Function]): List[Document] =
+    fhs.sortWith(_.index < _.index).map(x=>Lined(List("$", x.name, " ")))
 
   private def mkFun(fh: Function): Document = {
     val name = fh.name
@@ -54,7 +69,7 @@ object ModulePrinter {
       case End =>
         Unindented(mkInstr(h)) ::
         (mkCode(t) map Unindented)
-      case If_void | If_i32 | Block(_) | Loop(_) =>
+      case If_void | If_i32 | Block(_) | Loop(_) | Block32(_) | Loop32(_) =>
         mkInstr(h) ::
         (mkCode(t) map Indented)
       case _ =>
@@ -78,11 +93,15 @@ object ModulePrinter {
       case Le_s => "i32.le_s"
       case Eq => "i32.eq"
       case Drop => "drop"
+      case Nop => "nop"
       case If_void => "if"
       case If_i32 => "if (result i32)"
       case Else => "else"
       case Block(label) => s"block $$$label"
       case Loop(label) => s"loop $$$label"
+      case Block32(label) => s"block $$$label (result i32)"
+      case Loop32(label) => s"loop $$$label (result i32)"
+      case Call_indirect => "call_indirect $return_iti"
       case Br(label)=> s"br $$$label"
       case Return => "ret"
       case End => "end"

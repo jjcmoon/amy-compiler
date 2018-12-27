@@ -55,7 +55,7 @@ class ASTConstructor {
           constructName(parent)._1
         ).setPos(cse)
       case Node('FunDef ::= _, List(Leaf(df), name, _, params, _, _, retType, _, _, body, _)) =>
-        FunDef(
+        PureFunDef(
           constructName(name)._1,
           constructList(params, constructParam, hasComma = true),
           constructType(retType),

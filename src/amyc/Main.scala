@@ -5,6 +5,7 @@ import ast._
 import parsing._
 import analyzer._
 import codegen._
+import optimizer._
 
 import java.io.File
 
@@ -20,6 +21,8 @@ object Main extends MainHelpers {
       Parser andThen
       NameAnalyzer andThen
       TypeChecker andThen
+      TailcallOptimizer andThen
+      //treePrinterS("Trees after parsing") 
       CodeGen andThen
       CodePrinter
 

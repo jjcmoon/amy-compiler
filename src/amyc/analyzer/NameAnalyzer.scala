@@ -81,7 +81,7 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
     // Step 5: Discover functions signatures, add them to table
     for (mod <- p.modules) {
       mod.defs.foreach { 
-        case N.FunDef(name, params, retType, body) =>
+        case N.PureFunDef(name, params, retType, body) =>
           val symArgTypes = params map { case N.ParamDef(_, tt) => transformType(tt, mod.name)}
           val symRetType = transformType(retType, mod.name)
           table.addFunction(mod.name, name, symArgTypes, symRetType)
@@ -93,9 +93,9 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
     //         Reconstruct modules and analyse function bodies/ expressions
     
     // This part is split into three transfrom functions,
-    // for definitions, FunDefs, and expressions.
+    // for definitions, PureFunDefs, and expressions.
     // Keep in mind that we transform constructs of the NominalTreeModule 'N' to respective constructs of the SymbolicTreeModule 'S'.
-    // transformFunDef is given as an example, as well as some code for the other ones
+    // transformPureFunDef is given as an example, as well as some code for the other ones
 
     def transformDef(df: N.ClassOrFunDef, module: String): S.ClassOrFunDef = { df match {
       case N.AbstractClassDef(name) => table.getType(module, name) match {
@@ -112,12 +112,12 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
         }
         case None => fatal("Case class not found")
       }
-      case fd: N.FunDef =>
-        transformFunDef(fd, module)
+      case fd: N.PureFunDef =>
+        transformPureFunDef(fd, module)
     }}.setPos(df)
 
-    def transformFunDef(fd: N.FunDef, module: String): S.FunDef = {
-      val N.FunDef(name, params, retType, body) = fd
+    def transformPureFunDef(fd: N.PureFunDef, module: String): S.PureFunDef = {
+      val N.PureFunDef(name, params, retType, body) = fd
       val Some((sym, sig)) = table.getFunction(module, name)
 
       params.groupBy(_.name).foreach { case (name, ps) =>
@@ -135,7 +135,7 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 
       val paramsMap = paramNames.zip(newParams.map(_.name)).toMap
 
-      S.FunDef(
+      S.PureFunDef(
         sym,
         newParams,
         S.TypeTree(sig.retType).setPos(retType),
@@ -261,10 +261,7 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
               case None => fatal(s"No function or constructor ${qname.name} found in module $owner",expr)
             }
           }
-          val argTypes = sig match {
-            case FunSig(argT, _, _) => argT
-            case ConstrSig(argT, _, _) => argT
-          }
+          val argTypes = sig.argTypes
           if (args.length != argTypes.length)
             fatal(s"${qname.name} requires ${argTypes.length} parameters, but ${args.length} were found", expr)
           S.Call(id, args map transformExpr)

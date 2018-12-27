@@ -1,0 +1,39 @@
+As mentioned before there are two kinds of TCE being performed. Trampolines, which are more generally useable, and Tail recursion which is more performant, but only useable for recusive tail calls.
+
+For example: the following function whould be optimized with trampolines:
+\begin{lstlisting}
+object MutualRecursion {
+  def odd(n: Int): Boolean = {
+    if (n==0) {
+      false
+    } else {
+      even(n-1)
+    }
+  }
+
+  def even(n: Int): Boolean = {
+    if (n==0) {
+      true
+    } else {
+      odd(n-1)
+    }
+  }
+
+  Std.printBoolean(odd(1000001))
+}
+\end{lstlisting}
+
+While this program could use tail recursion:\footnote{Note that this example has the most notable diverging behaviour. Without TCE it whould cause a stack overflow almost instantaneously.}
+
+\begin{lstlisting}
+object InfiniteLoop {
+  def loop():Unit = {
+    loop()
+  }
+
+  loop()
+}
+\end{lstlisting}
+
+
+This leaves the edge case of a program with both kinds of recursion. Here I chose to use trampolines, in order to avoid the complexity of a hybrid approach.

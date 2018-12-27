@@ -39,12 +39,28 @@ trait Printer {
         def printField(f: TypeTree) = "v: " <:> rec(f)
         "case class " <:> name <:> "(" <:> Lined(fields map printField, ", ") <:> ") extends " <:> parent
 
-      case FunDef(name, params, retType, body) =>
+      case PureFunDef(name, params, retType, body) =>
         Stacked(
           "def " <:> name <:> "(" <:> Lined(params map (rec(_)), ", ") <:> "): " <:> rec(retType) <:> " = {",
           Indented(rec(body, false)),
           "}"
         )
+
+      case TailRecFunDef(name, params, retType, body) =>
+        Stacked(
+          "def_TR " <:> name <:> "(" <:> Lined(params map (rec(_)), ", ") <:> "): " <:> rec(retType) <:> " = {",
+          Indented(rec(body, false)),
+          "}"
+        )
+
+      case TrampFunDef(name, params, retType, body) => 
+        Stacked(
+          "def_tramp " <:> name <:> "(" <:> Lined(params map (rec(_)), ", ") <:> "): " <:> rec(retType) <:> " = {",
+          Indented(rec(body, false)),
+          "}"
+        )
+
+
 
       case ParamDef(name, tpe) =>
         name <:> ": " <:> rec(tpe)
@@ -88,6 +104,15 @@ trait Printer {
         "-(" <:> rec(e) <:> ")"
       case Call(name, args) =>
         name <:> "(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+      case IndirectCall(name, args) =>
+        name <:> "_indirect(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+      case Trampoline(name, args) =>
+        name <:> "_tramp(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+      case TailCall(args) =>
+        "tailcall(" <:> Lined(args map (rec(_)), ", ") <:> ")"
+      case TrampReturn(fr) =>
+        "return_tramp " <:> rec(fr)
+
       case Sequence(lhs, rhs) =>
         val main = Stacked(
           rec(lhs, false) <:> ";",
