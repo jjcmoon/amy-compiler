@@ -96,10 +96,10 @@ object TypeChecker extends Pipeline[(Program, SymbolTable), (Program, SymbolTabl
 
         case Call(qname, args) => {
           val (argTypes, retType) = table.getFunction(qname) match {
-            case Some(FunSig(argTypes, retType, _)) => (argTypes, retType)
+            case Some(FunSig(argTypes, retType, _, _)) => (argTypes, retType)
             case _ => table.getConstructor(qname) match {
                 case Some(ConstrSig(argTypes, parent, _)) => (argTypes, ClassType(parent))
-                // If qname was not a function, nor a constructor, this whould be caught by nameanalyzer
+                case _ => ctx.reporter.fatal("Name not found whilst type checking. This should have been caught by name analyzer!")
               }
           }
           (args zip argTypes).flatMap{case (arg,argtp) => genConstraints(arg,argtp)} ++ topLevelConstraint(retType)

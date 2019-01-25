@@ -81,6 +81,7 @@ trait TreeModule {
   // Represents a computational error; prints its message, then exits
   case class Error(msg: Expr) extends Expr
 
+  // Wraps a expression in a function body, indicating it will return to a trampoline (used in codegen)
   case class TrampReturn(fr:Expr) extends Expr
 
   // Cases and patterns for Match expressions
@@ -104,8 +105,12 @@ trait TreeModule {
     val body: Expr
     def paramNames = params.map(_.name)
   }
+
+  // Regular function definition
   case class PureFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
+  // Tail recursive function definition
   case class TailRecFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
+  // Trampoline-able function definition
   case class TrampFunDef(name: Name, params: List[ParamDef], retType: TypeTree, body: Expr) extends FunDef
 
   case class AbstractClassDef(name: Name) extends ClassOrFunDef

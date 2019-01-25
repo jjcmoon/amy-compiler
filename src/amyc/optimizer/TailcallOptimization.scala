@@ -6,6 +6,15 @@ import analyzer._
 import ast.SymbolicTreeModule._
 import codegen.Utils.fullName
 
+
+// Tail call Optimizer for Amy
+// Takes a symbolic program and returns a symbolic program,
+// where tail calls are marked as such.
+
+// This only does detection, code generation handles the
+// actual tailcalls/trampolines. TCE can be disabled by
+// removing this optimizer from the pipeline.
+
 object TailcallOptimizer extends Pipeline[(Program, SymbolTable), (Program, SymbolTable)] {
 
 
@@ -40,6 +49,7 @@ object TailcallOptimizer extends Pipeline[(Program, SymbolTable), (Program, Symb
     def hasNonRecTailCall(e: Expr, owner: QualifiedName): Boolean =
       hasTailWith(e)(x => x.qname!=owner)
 
+    // all functions that need to be called by a trampoline instead of a regular call
     val trampFunDefs: List[QualifiedName] = program.modules.flatMap(mod => mod.defs.filter {
       case x:PureFunDef => 
         hasNonRecTailCall(x.body, x.name) && mod.name.toString!="Std" && x.params.length == 1
@@ -68,6 +78,7 @@ object TailcallOptimizer extends Pipeline[(Program, SymbolTable), (Program, Symb
         case _ => df
       }
 
+    // TODO: whould it be possible for isCall and noCall to be implicit (problem: have same (super)type)?
     def rewriteTail(e:Expr, isCall: Call=>Expr, noCall: Expr=>Expr):Expr = e match {
       case c@Call(_,_) if isFunctionCall(c) =>
         isCall(c)
@@ -83,12 +94,15 @@ object TailcallOptimizer extends Pipeline[(Program, SymbolTable), (Program, Symb
       case _ => noCall(e)
     }
 
+    // rewrites inside of TC recursive function
     def rewriteTailCall(e: Expr):Expr =
       rewriteTail(e, {case Call(n,args) => TailCall(args)}, e=>e)
 
+    // rewrites inside of general TC function (returning to trampoline)
     def rewriteTrampBody(e:Expr):Expr =
       rewriteTail(e, {case Call(n,args) => IndirectCall(n,args)}, e=>TrampReturn(e))
 
+    // rewrites code to use trampolines instead of generic calls
     def rewriteTrampRef(e:Expr):Expr =
       rewriteTail(e, {case Call(n,args) => 
         if (trampFunDefs.contains(n))

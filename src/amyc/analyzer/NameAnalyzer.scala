@@ -271,7 +271,7 @@ object NameAnalyzer extends Pipeline[N.Program, (S.Program, SymbolTable)] {
 
         case x => {
           println(x)
-          fatal("unimplemented", expr)
+          fatal("Unimplemented", expr)
         }
       }
       res.setPos(expr)

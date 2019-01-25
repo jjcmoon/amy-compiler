@@ -147,7 +147,8 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
             case Some(FunSig(_, _, owner,_)) => argsCode <:> Call(fullName(owner, qn))
             case _ => table.getConstructor(qn) match {
               case Some(ConstrSig(_,_,index)) => adt(args,index)
-              //cant be none
+              case _ => ctx.reporter.fatal("Name not found during codegen. This should have been caught by name analyzer!")
+
             }
           }
         }
@@ -163,8 +164,12 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
         }
 
         case IndirectCall(qn, args) => {
+          // lookup ID of function index
           val tableID = table.getFunction(qn).orNull.index
+          // Set up arguments and id in ADT for trampoline
           adt(args, tableID)
+
+          // TODO: might be better if Indirect calls are already translated to equivalent amy-ish code (combined with a library/TCE.scala ?) in TCE optimizer
         }
 
         case Trampoline(qn, args) => {
@@ -173,14 +178,17 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
           cgExpr(AmyCall(qn,args)) <:>
           SetLocal(ret) <:>
           Loop32("tramp") <:>
+            // Check wheter the returned function wants to a call new function
             GetLocal(ret) <:>
             Const(-1) <:>
             Eq <:>
             If_i32 <:>
+              // If no: get return value and free memory
               updateMemPointer(-1) <:>
               GetGlobal(0) <:>
               Load <:>
             Else <:>
+              // If yes:
               // free memory
               GetLocal(ret) <:>
               SetGlobal(0) <:>
@@ -192,6 +200,7 @@ object CodeGen extends Pipeline[(Program, SymbolTable), Module] {
               // load table ID
               GetGlobal(0) <:>
               Load <:>
+              // Call function and repeat
               Call_indirect <:>
               SetLocal(ret) <:>
               Br("tramp") <:>
